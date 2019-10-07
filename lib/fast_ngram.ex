@@ -46,6 +46,7 @@ defmodule FastNgram do
       iex> FastNgram.word_ngrams("", 2)
       []
   """
+  @spec word_ngrams(String.t(), non_neg_integer) :: list
   def word_ngrams(string, n) when is_integer(n) and n > 0 do
     words = string |> String.split()
 
