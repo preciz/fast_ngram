@@ -24,11 +24,11 @@ defmodule FastNgram do
   end
 
   defp do_letter_ngrams(graphemes, n) do
-    n_gram = graphemes |> Enum.take(n)
+    ngram = graphemes |> Enum.take(n)
 
-    case length(n_gram) == n do
+    case length(ngram) == n do
       true ->
-        [n_gram |> :binary.list_to_bin() | do_letter_ngrams(tl(graphemes), n)]
+        [ngram |> :binary.list_to_bin() | do_letter_ngrams(tl(graphemes), n)]
 
       false ->
         []
