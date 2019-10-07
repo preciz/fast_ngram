@@ -1,6 +1,6 @@
 # FastNgram
 
-A fast and unicode aware letter N-gram library written in Elixir.
+A fast and unicode aware letter & word N-gram library written in Elixir.
 
 ## Installation
 
@@ -16,14 +16,18 @@ end
 
 ## Usage
 ```elixir
+iex> FastNgram.letter_ngrams("abcde", 2)
+["ab", "bc", "cd", "de"]
 iex> FastNgram.letter_ngrams("¥ · € · $", 3)
 ["¥ ·", " · ", "· €", " € ", "€ ·", " · ", "· $"]
 iex> FastNgram.letter_ngrams("", 2)
 []
-iex> FastNgram.letter_ngrams("abcd", 1)
-["a", "b", "c", "d"]
-iex> FastNgram.letter_ngrams("abcde", 2)
-["ab", "bc", "cd", "de"]
+iex> FastNgram.word_ngrams("the bus came to a halt", 2)
+["the bus", "bus came", "came to", "to a", "a halt"]
+iex> FastNgram.word_ngrams("the bus came to a halt", 3)
+["the bus came", "bus came to", "came to a", "to a halt"]
+iex> FastNgram.word_ngrams("", 2)
+[]
 ```
 
 Documentation can be be found at [https://hexdocs.pm/fast_ngram](https://hexdocs.pm/fast_ngram).

@@ -14,7 +14,7 @@ defmodule FastNgram.MixProject do
       docs: docs(),
       package: package(),
       name: "FastNgram",
-      description: "A fast and unicode aware letter N-gram library written in Elixir.",
+      description: "A fast and unicode aware letter & word N-gram library written in Elixir."
     ]
   end
 
