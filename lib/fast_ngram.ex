@@ -17,6 +17,10 @@ defmodule FastNgram do
       ["ab", "bc", "cd", "de"]
   """
   @spec letter_ngrams(String.t(), non_neg_integer) :: list
+  def letter_ngrams(string, 1) do
+    String.graphemes(string)
+  end
+
   def letter_ngrams(string, n) when is_integer(n) and n > 0 do
     graphemes = string |> String.graphemes()
 
