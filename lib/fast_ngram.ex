@@ -29,7 +29,7 @@ defmodule FastNgram do
 
   defp do_letter_ngrams(n, len, graphemes) when len >= n do
     [
-      Enum.take(graphemes, n) |> :binary.list_to_bin()
+      Enum.take(graphemes, n) |> IO.iodata_to_binary()
       | do_letter_ngrams(n, len - 1, tl(graphemes))
     ]
   end
