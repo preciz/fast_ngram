@@ -48,23 +48,25 @@ defmodule FastNgram do
       ["the bus came", "bus came to", "came to a", "to a halt"]
       iex> FastNgram.word_ngrams("", 2)
       []
+      iex> FastNgram.word_ngrams("some words here", 1)
+      ["some", "words", "here"]
   """
   @spec word_ngrams(String.t(), non_neg_integer) :: list
+  def word_ngrams(string, 1) do
+    string |> String.split()
+  end
+
   def word_ngrams(string, n) when is_integer(n) and n > 0 do
     words = string |> String.split()
 
-    do_word_ngrams(words, n)
+    do_word_ngrams(n, length(words), words)
   end
 
-  defp do_word_ngrams(words, n) do
-    ngram = words |> Enum.take(n)
+  defp do_word_ngrams(n, len, words) when len >= n do
+    [Enum.take(words, n) |> Enum.join(" ") | do_word_ngrams(n, len - 1, tl(words))]
+  end
 
-    case length(ngram) == n do
-      true ->
-        [ngram |> Enum.join(" ") | do_word_ngrams(tl(words), n)]
-
-      false ->
-        []
-    end
+  defp do_word_ngrams(_, _, _) do
+    []
   end
 end
