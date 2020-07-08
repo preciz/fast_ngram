@@ -21,22 +21,21 @@ defmodule FastNgram do
     String.graphemes(string)
   end
 
-  def letter_ngrams(string, n) when is_integer(n) and n > 0 do
+  def letter_ngrams(string, n) when is_integer(n) and n > 1 do
     graphemes = string |> String.graphemes()
 
-    do_letter_ngrams(graphemes, n)
+    do_letter_ngrams(length(graphemes), n, graphemes)
   end
 
-  defp do_letter_ngrams(graphemes, n) do
-    ngram = graphemes |> Enum.take(n)
+  defp do_letter_ngrams(len, n, graphemes) when len >= n do
+    [
+      Enum.take(graphemes, n) |> :binary.list_to_bin()
+      | do_letter_ngrams(len - 1, n, tl(graphemes))
+    ]
+  end
 
-    case length(ngram) == n do
-      true ->
-        [ngram |> :binary.list_to_bin() | do_letter_ngrams(tl(graphemes), n)]
-
-      false ->
-        []
-    end
+  defp do_letter_ngrams(_, _, _) do
+    []
   end
 
   @doc """
