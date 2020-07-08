@@ -24,13 +24,13 @@ defmodule FastNgram do
   def letter_ngrams(string, n) when is_integer(n) and n > 1 do
     graphemes = string |> String.graphemes()
 
-    do_letter_ngrams(length(graphemes), n, graphemes)
+    do_letter_ngrams(n, length(graphemes), graphemes)
   end
 
-  defp do_letter_ngrams(len, n, graphemes) when len >= n do
+  defp do_letter_ngrams(n, len, graphemes) when len >= n do
     [
       Enum.take(graphemes, n) |> :binary.list_to_bin()
-      | do_letter_ngrams(len - 1, n, tl(graphemes))
+      | do_letter_ngrams(n, len - 1, tl(graphemes))
     ]
   end
 
