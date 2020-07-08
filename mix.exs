@@ -40,7 +40,7 @@ defmodule FastNgram.MixProject do
     [
       main: "FastNgram",
       source_ref: "v#{@version}",
-      source_url: @github,
+      source_url: @github
     ]
   end
 end
