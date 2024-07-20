@@ -34,7 +34,7 @@ iex> FastNgram.word_ngrams("", 2)
 
 ## Documentation
 
-Documentation can be be found at [https://hexdocs.pm/fast_ngram](https://hexdocs.pm/fast_ngram).
+Documentation can be found at [https://hexdocs.pm/fast_ngram](https://hexdocs.pm/fast_ngram).
 
 ## License
 
