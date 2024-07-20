@@ -1,6 +1,6 @@
 # FastNgram
 
-[![Build Status](https://travis-ci.org/preciz/fast_ngram.svg?branch=master)](https://travis-ci.org/preciz/fast_ngram)
+[![test](https://github.com/preciz/fast_ngram/actions/workflows/test.yml/badge.svg)](https://github.com/preciz/fast_ngram/actions/workflows/test.yml)
 
 A fast and unicode aware letter & word N-gram library written in Elixir.
 
