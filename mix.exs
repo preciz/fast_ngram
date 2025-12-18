@@ -25,7 +25,7 @@ defmodule FastNgram.MixProject do
   defp deps do
     [
       {:benchee, "~> 1.5.0", only: :dev},
-      {:ex_doc, "~> 0.34", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.39", only: :dev, runtime: false}
     ]
   end
 
