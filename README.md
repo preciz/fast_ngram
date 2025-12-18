@@ -11,7 +11,7 @@ The package can be installed by adding `fast_ngram` to your list of dependencies
 ```elixir
 def deps do
   [
-    {:fast_ngram, "~> 1.0"}
+    {:fast_ngram, "~> 1.2"}
   ]
 end
 ```
