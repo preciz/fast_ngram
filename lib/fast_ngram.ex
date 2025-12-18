@@ -22,20 +22,31 @@ defmodule FastNgram do
   end
 
   def letter_ngrams(string, n) when is_integer(n) and n > 1 do
-    graphemes = string |> String.graphemes()
-
-    do_letter_ngrams(n, length(graphemes), graphemes)
+    case take_graphemes(string, n - 1, []) do
+      {initial, rest} -> do_letter_ngrams(rest, initial, n)
+      _ -> []
+    end
   end
 
-  defp do_letter_ngrams(n, len, graphemes) when len >= n do
-    [
-      Enum.take(graphemes, n) |> IO.iodata_to_binary()
-      | do_letter_ngrams(n, len - 1, tl(graphemes))
-    ]
+  defp do_letter_ngrams(rest, window, n) do
+    case String.next_grapheme(rest) do
+      {g, next_rest} ->
+        new_full_window = window ++ [g]
+        ngram = IO.iodata_to_binary(new_full_window)
+        [ngram | do_letter_ngrams(next_rest, tl(new_full_window), n)]
+
+      nil ->
+        []
+    end
   end
 
-  defp do_letter_ngrams(_, _, _) do
-    []
+  defp take_graphemes(str, 0, acc), do: {Enum.reverse(acc), str}
+
+  defp take_graphemes(str, k, acc) do
+    case String.next_grapheme(str) do
+      {g, rest} -> take_graphemes(rest, k - 1, [g | acc])
+      nil -> nil
+    end
   end
 
   @doc """
