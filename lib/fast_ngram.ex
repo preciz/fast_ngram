@@ -22,31 +22,28 @@ defmodule FastNgram do
   end
 
   def letter_ngrams(string, n) when is_integer(n) and n > 1 do
-    case take_graphemes(string, n - 1, []) do
-      {initial, rest} -> do_letter_ngrams(rest, initial, n)
-      _ -> []
+    graphemes = String.graphemes(string)
+
+    if length(graphemes) < n do
+      []
+    else
+      sizes = Enum.map(graphemes, &byte_size/1)
+      # Initial length of the first N-gram
+      {initial_sizes, rest_sizes} = Enum.split(sizes, n)
+      len = Enum.sum(initial_sizes)
+
+      do_letter_ngrams(string, 0, len, rest_sizes, sizes)
     end
   end
 
-  defp do_letter_ngrams(rest, window, n) do
-    case String.next_grapheme(rest) do
-      {g, next_rest} ->
-        new_full_window = window ++ [g]
-        ngram = IO.iodata_to_binary(new_full_window)
-        [ngram | do_letter_ngrams(next_rest, tl(new_full_window), n)]
-
-      nil ->
-        []
-    end
+  defp do_letter_ngrams(string, offset, len, [next_s | rest_sizes], [this_s | sizes]) do
+    ngram = binary_part(string, offset, len)
+    # New len = old_len - this_s + next_s
+    [ngram | do_letter_ngrams(string, offset + this_s, len - this_s + next_s, rest_sizes, sizes)]
   end
 
-  defp take_graphemes(str, 0, acc), do: {Enum.reverse(acc), str}
-
-  defp take_graphemes(str, k, acc) do
-    case String.next_grapheme(str) do
-      {g, rest} -> take_graphemes(rest, k - 1, [g | acc])
-      nil -> nil
-    end
+  defp do_letter_ngrams(string, offset, len, [], _) do
+    [binary_part(string, offset, len)]
   end
 
   @doc """
