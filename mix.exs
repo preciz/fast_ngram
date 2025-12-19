@@ -1,7 +1,7 @@
 defmodule FastNgram.MixProject do
   use Mix.Project
 
-  @version "1.2.1"
+  @version "1.2.2"
   @github "https://github.com/preciz/fast_ngram"
 
   def project do
