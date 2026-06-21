@@ -24,6 +24,7 @@ defmodule FastNgram do
   def letter_ngrams(string, n) when is_integer(n) and n > 1 do
     if ascii_only?(string) do
       len = byte_size(string)
+
       if len < n do
         []
       else
@@ -52,6 +53,7 @@ defmodule FastNgram do
       [_ | rest] ->
         size = byte_size(binary) - byte_size(rest)
         get_initial_window(rest, n - 1, len + size, [size | acc])
+
       [] ->
         :error
     end
@@ -62,6 +64,7 @@ defmodule FastNgram do
       [_ | rest] ->
         size = byte_size(binary) - byte_size(rest)
         get_remaining_sizes(rest, [size | acc])
+
       [] ->
         acc
     end
@@ -72,11 +75,21 @@ defmodule FastNgram do
   defp drop_n([], _), do: []
 
   defp ascii_only?(<<
-    b1, b2, b3, b4, b5, b6, b7, b8,
-    rest::binary
-  >>) when b1 < 128 and b2 < 128 and b3 < 128 and b4 < 128 and b5 < 128 and b6 < 128 and b7 < 128 and b8 < 128 do
+         b1,
+         b2,
+         b3,
+         b4,
+         b5,
+         b6,
+         b7,
+         b8,
+         rest::binary
+       >>)
+       when b1 < 128 and b2 < 128 and b3 < 128 and b4 < 128 and b5 < 128 and b6 < 128 and b7 < 128 and
+              b8 < 128 do
     ascii_only?(rest)
   end
+
   defp ascii_only?(<<b, rest::binary>>) when b < 128, do: ascii_only?(rest)
   defp ascii_only?(<<>>), do: true
   defp ascii_only?(_), do: false
@@ -141,8 +154,10 @@ defmodule FastNgram do
   defp initial_window_len([], _, _), do: :error
 
   defp do_word_ngrams(joined, offset, len, [next_s | rest_steps], [this_s | steps]) do
-    [binary_part(joined, offset, len) |
-     do_word_ngrams(joined, offset + this_s, len - this_s + next_s, rest_steps, steps)]
+    [
+      binary_part(joined, offset, len)
+      | do_word_ngrams(joined, offset + this_s, len - this_s + next_s, rest_steps, steps)
+    ]
   end
 
   defp do_word_ngrams(joined, offset, len, [], _steps) do
