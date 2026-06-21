@@ -22,18 +22,71 @@ defmodule FastNgram do
   end
 
   def letter_ngrams(string, n) when is_integer(n) and n > 1 do
-    graphemes = String.graphemes(string)
-
-    if length(graphemes) < n do
-      []
+    if ascii_only?(string) do
+      len = byte_size(string)
+      if len < n do
+        []
+      else
+        do_ascii(string, 0, len - n, n)
+      end
     else
-      sizes = Enum.map(graphemes, &byte_size/1)
-      # Initial length of the first N-gram
-      {initial_sizes, rest_sizes} = Enum.split(sizes, n)
-      len = Enum.sum(initial_sizes)
+      case get_initial_window(string, n, 0, []) do
+        {:ok, len, initial_sizes_rev, rest_binary} ->
+          sizes_rev = get_remaining_sizes(rest_binary, initial_sizes_rev)
+          sizes = :lists.reverse(sizes_rev)
+          rest_sizes = drop_n(sizes, n)
+          do_letter_ngrams(string, 0, len, rest_sizes, sizes)
 
-      do_letter_ngrams(string, 0, len, rest_sizes, sizes)
+        :error ->
+          []
+      end
     end
+  end
+
+  defp get_initial_window(binary, 0, len, acc) do
+    {:ok, len, acc, binary}
+  end
+
+  defp get_initial_window(binary, n, len, acc) do
+    case :string.next_grapheme(binary) do
+      [_ | rest] ->
+        size = byte_size(binary) - byte_size(rest)
+        get_initial_window(rest, n - 1, len + size, [size | acc])
+      [] ->
+        :error
+    end
+  end
+
+  defp get_remaining_sizes(binary, acc) do
+    case :string.next_grapheme(binary) do
+      [_ | rest] ->
+        size = byte_size(binary) - byte_size(rest)
+        get_remaining_sizes(rest, [size | acc])
+      [] ->
+        acc
+    end
+  end
+
+  defp drop_n(list, 0), do: list
+  defp drop_n([_ | t], n), do: drop_n(t, n - 1)
+  defp drop_n([], _), do: []
+
+  defp ascii_only?(<<
+    b1, b2, b3, b4, b5, b6, b7, b8,
+    rest::binary
+  >>) when b1 < 128 and b2 < 128 and b3 < 128 and b4 < 128 and b5 < 128 and b6 < 128 and b7 < 128 and b8 < 128 do
+    ascii_only?(rest)
+  end
+  defp ascii_only?(<<b, rest::binary>>) when b < 128, do: ascii_only?(rest)
+  defp ascii_only?(<<>>), do: true
+  defp ascii_only?(_), do: false
+
+  defp do_ascii(string, offset, max_offset, n) when offset < max_offset do
+    [binary_part(string, offset, n) | do_ascii(string, offset + 1, max_offset, n)]
+  end
+
+  defp do_ascii(string, offset, _, n) do
+    [binary_part(string, offset, n)]
   end
 
   defp do_letter_ngrams(string, offset, len, [next_s | rest_sizes], [this_s | sizes]) do
