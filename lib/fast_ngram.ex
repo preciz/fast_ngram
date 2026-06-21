@@ -114,20 +114,38 @@ defmodule FastNgram do
   """
   @spec word_ngrams(String.t(), non_neg_integer) :: list
   def word_ngrams(string, 1) do
-    string |> String.split()
+    String.split(string)
   end
 
-  def word_ngrams(string, n) when is_integer(n) and n > 0 do
-    words = string |> String.split()
+  def word_ngrams(string, n) when is_integer(n) and n > 1 do
+    case String.split(string) do
+      [] ->
+        []
 
-    do_word_ngrams(n, length(words), words)
+      words ->
+        joined = Enum.join(words, " ")
+        steps = Enum.map(words, &(byte_size(&1) + 1))
+        rest_steps = drop_n(steps, n)
+
+        case initial_window_len(steps, n, 0) do
+          {:ok, len} -> do_word_ngrams(joined, 0, len, rest_steps, steps)
+          :error -> []
+        end
+    end
   end
 
-  defp do_word_ngrams(n, len, words) when len >= n do
-    [Enum.take(words, n) |> Enum.join(" ") | do_word_ngrams(n, len - 1, tl(words))]
+  defp initial_window_len([s | rest], n, acc) when n > 0,
+    do: initial_window_len(rest, n - 1, acc + s)
+
+  defp initial_window_len(_, 0, acc), do: {:ok, acc - 1}
+  defp initial_window_len([], _, _), do: :error
+
+  defp do_word_ngrams(joined, offset, len, [next_s | rest_steps], [this_s | steps]) do
+    [binary_part(joined, offset, len) |
+     do_word_ngrams(joined, offset + this_s, len - this_s + next_s, rest_steps, steps)]
   end
 
-  defp do_word_ngrams(_, _, _) do
-    []
+  defp do_word_ngrams(joined, offset, len, [], _steps) do
+    [binary_part(joined, offset, len)]
   end
 end
