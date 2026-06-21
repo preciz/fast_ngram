@@ -21,6 +21,32 @@ defmodule FastNgramTest do
       assert FastNgram.letter_ngrams(str, 2) == ["aé", "éñ", "ñ👍"]
     end
 
+    test "handles mixed ASCII and Unicode strings correctly" do
+      # Starts and ends with ASCII, Unicode in the middle
+      assert FastNgram.letter_ngrams("abcéñ👍def", 2) == [
+               "ab",
+               "bc",
+               "cé",
+               "éñ",
+               "ñ👍",
+               "👍d",
+               "de",
+               "ef"
+             ]
+    end
+
+    test "handles combining character sequences correctly" do
+      # e + combining acute accent (\u0301) and a + combining diaeresis (\u0308)
+      # Each combining sequence is a single grapheme
+      str = "e\u0301a\u0308"
+      assert FastNgram.letter_ngrams(str, 2) == ["e\u0301a\u0308"]
+    end
+
+    test "handles Emoji ZWJ (Zero-Width Joiner) sequences correctly" do
+      # "👨‍👩‍👧‍👦" is a single grapheme cluster representing a family
+      assert FastNgram.letter_ngrams("a👨‍👩‍👧‍👦b", 2) == ["a👨‍👩‍👧‍👦", "👨‍👩‍👧‍👦b"]
+    end
+
     test "returns empty list when n is larger than string length" do
       assert FastNgram.letter_ngrams("abc", 4) == []
     end
@@ -45,6 +71,15 @@ defmodule FastNgramTest do
 
     test "returns 2-grams of words" do
       assert FastNgram.word_ngrams("one two three", 2) == ["one two", "two three"]
+    end
+
+    test "handles Unicode words correctly" do
+      assert FastNgram.word_ngrams("Elixir es increíble", 2) == ["Elixir es", "es increíble"]
+
+      assert FastNgram.word_ngrams("日本語 も 大丈夫", 2) == [
+               "日本語 も",
+               "mo 大丈夫" |> String.replace("mo", "も")
+             ]
     end
 
     test "returns empty list when n is larger than word count" do
