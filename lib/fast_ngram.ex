@@ -31,48 +31,48 @@ defmodule FastNgram do
         do_ascii(string, 0, len - n, n)
       end
     else
-      case get_initial_window(string, n, 0, []) do
-        {:ok, len, initial_sizes_rev, rest_binary} ->
-          sizes_rev = get_remaining_sizes(rest_binary, initial_sizes_rev)
-          sizes = :lists.reverse(sizes_rev)
-          rest_sizes = drop_n(sizes, n)
-          do_letter_ngrams(string, 0, len, rest_sizes, sizes)
-
+      case grapheme_sizes(string, n, []) do
         :error ->
           []
+
+        sizes_rev ->
+          sizes = :lists.reverse(sizes_rev)
+          {:ok, len, rest_sizes} = initial_window(sizes, n, 0)
+          do_sliding_ngrams(string, 0, len, rest_sizes, sizes)
       end
     end
   end
 
-  defp get_initial_window(binary, 0, len, acc) do
-    {:ok, len, acc, binary}
-  end
+  defp grapheme_sizes(binary, 0, acc), do: grapheme_sizes(binary, acc)
 
-  defp get_initial_window(binary, n, len, acc) do
+  defp grapheme_sizes(binary, n, acc) do
     case :string.next_grapheme(binary) do
       [_ | rest] ->
         size = byte_size(binary) - byte_size(rest)
-        get_initial_window(rest, n - 1, len + size, [size | acc])
+        grapheme_sizes(rest, n - 1, [size | acc])
 
       [] ->
         :error
     end
   end
 
-  defp get_remaining_sizes(binary, acc) do
+  defp grapheme_sizes(binary, acc) do
     case :string.next_grapheme(binary) do
       [_ | rest] ->
         size = byte_size(binary) - byte_size(rest)
-        get_remaining_sizes(rest, [size | acc])
+        grapheme_sizes(rest, [size | acc])
 
       [] ->
         acc
     end
   end
 
-  defp drop_n(list, 0), do: list
-  defp drop_n([_ | t], n), do: drop_n(t, n - 1)
-  defp drop_n([], _), do: []
+  defp initial_window([s | rest], n, acc) when n > 0 do
+    initial_window(rest, n - 1, acc + s)
+  end
+
+  defp initial_window(rest, 0, acc), do: {:ok, acc, rest}
+  defp initial_window([], _, _), do: :error
 
   defp ascii_only?(<<
          b1,
@@ -102,13 +102,14 @@ defmodule FastNgram do
     [binary_part(string, offset, n)]
   end
 
-  defp do_letter_ngrams(string, offset, len, [next_s | rest_sizes], [this_s | sizes]) do
-    ngram = binary_part(string, offset, len)
-    # New len = old_len - this_s + next_s
-    [ngram | do_letter_ngrams(string, offset + this_s, len - this_s + next_s, rest_sizes, sizes)]
+  defp do_sliding_ngrams(string, offset, len, [next_s | rest_sizes], [this_s | sizes]) do
+    [
+      binary_part(string, offset, len)
+      | do_sliding_ngrams(string, offset + this_s, len - this_s + next_s, rest_sizes, sizes)
+    ]
   end
 
-  defp do_letter_ngrams(string, offset, len, [], _) do
+  defp do_sliding_ngrams(string, offset, len, [], _) do
     [binary_part(string, offset, len)]
   end
 
@@ -138,29 +139,11 @@ defmodule FastNgram do
       words ->
         joined = Enum.join(words, " ")
         steps = Enum.map(words, &(byte_size(&1) + 1))
-        rest_steps = drop_n(steps, n)
 
-        case initial_window_len(steps, n, 0) do
-          {:ok, len} -> do_word_ngrams(joined, 0, len, rest_steps, steps)
+        case initial_window(steps, n, -1) do
+          {:ok, len, rest_steps} -> do_sliding_ngrams(joined, 0, len, rest_steps, steps)
           :error -> []
         end
     end
-  end
-
-  defp initial_window_len([s | rest], n, acc) when n > 0,
-    do: initial_window_len(rest, n - 1, acc + s)
-
-  defp initial_window_len(_, 0, acc), do: {:ok, acc - 1}
-  defp initial_window_len([], _, _), do: :error
-
-  defp do_word_ngrams(joined, offset, len, [next_s | rest_steps], [this_s | steps]) do
-    [
-      binary_part(joined, offset, len)
-      | do_word_ngrams(joined, offset + this_s, len - this_s + next_s, rest_steps, steps)
-    ]
-  end
-
-  defp do_word_ngrams(joined, offset, len, [], _steps) do
-    [binary_part(joined, offset, len)]
   end
 end

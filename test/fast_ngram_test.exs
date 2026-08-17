@@ -49,6 +49,7 @@ defmodule FastNgramTest do
 
     test "returns empty list when n is larger than string length" do
       assert FastNgram.letter_ngrams("abc", 4) == []
+      assert FastNgram.letter_ngrams("aé👍", 4) == []
     end
 
     test "returns single n-gram when n equals string length" do
