@@ -137,13 +137,41 @@ defmodule FastNgram do
         []
 
       words ->
-        joined = Enum.join(words, " ")
-        steps = Enum.map(words, &(byte_size(&1) + 1))
+        case initial_word_window(words, n, -1) do
+          {:ok, len, rest_words} ->
+            joined = Enum.join(words, " ")
+            do_word_ngrams(joined, 0, len, rest_words, words)
 
-        case initial_window(steps, n, -1) do
-          {:ok, len, rest_steps} -> do_sliding_ngrams(joined, 0, len, rest_steps, steps)
-          :error -> []
+          :error ->
+            []
         end
     end
+  end
+
+  defp initial_word_window([word | rest], n, acc) when n > 0 do
+    initial_word_window(rest, n - 1, acc + byte_size(word) + 1)
+  end
+
+  defp initial_word_window(rest, 0, acc), do: {:ok, acc, rest}
+  defp initial_word_window([], _, _), do: :error
+
+  defp do_word_ngrams(joined, offset, len, [next | rest], [current | words]) do
+    current_step = byte_size(current) + 1
+    next_step = byte_size(next) + 1
+
+    [
+      binary_part(joined, offset, len)
+      | do_word_ngrams(
+          joined,
+          offset + current_step,
+          len - current_step + next_step,
+          rest,
+          words
+        )
+    ]
+  end
+
+  defp do_word_ngrams(joined, offset, len, [], _words) do
+    [binary_part(joined, offset, len)]
   end
 end
